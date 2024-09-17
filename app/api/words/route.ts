@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { Pool } from 'pg';
 
 const pool = new Pool({
-  connectionString: "postgres://default:7uK0vCEeHITt@ep-fragrant-tooth-a4ylkur1.us-east-1.aws.neon.tech:5432/verceldb?sslmode=require"
+  connectionString: process.env.DATABASE_URL,
 });
 
 function isValidWord(word: string): boolean {

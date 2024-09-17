@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { ClipboardCopy, Instagram } from "lucide-react"
+import { ScrollArea } from "@/components/ui/scroll-area"
 
 type DisplayFormat = 'plain' | 'comma' | 'json'
 
@@ -199,7 +200,7 @@ export function Page() {
             >
               <ClipboardCopy className="h-4 w-4" />
             </Button>
-            <pre className="bg-gray-100 p-4 rounded-md overflow-x-auto whitespace-pre-wrap">
+            <pre className="bg-gray-100 p-4 rounded-md overflow-x-auto whitespace-pre-wrap overflow">
               {formatWords(displayFormat)}
             </pre>
           </div>
