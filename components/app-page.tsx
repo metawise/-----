@@ -125,6 +125,15 @@ export function Page() {
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-4xl font-bold text-center mb-8">Монгол хараалын үгс</h1>
+      <p className="text-justify mb-8 max-w-md mx-auto">
+        Энэхүү төсөл нь интернет орчин дахь дарамт, доромжлол болон сөрөг үг хэллэгийг 
+        таньж, түүнтэй тэмцэх зорилготой. <br/><br/>Монгол хэлний хараалын үгс болон бусад 
+        хортой хэллэгүүдийг цуглуулж, тэдгээрийг таних, шүүх, улмаар эерэг, хүндэтгэлтэй 
+        харилцааг дэмжихийг хүссэний үүднээс энэ сайтыг эхлүүллээ.<br/><br/>Энэ мэдээллийг ашиглан бид цахим орчин дахь 
+        хэл яриаг сайжруулж, илүү аюулгүй, эерэг орчныг бий болгоход хувь нэмрээ оруулах 
+        болно. Та шинэ үг нэмэх, одоо байгаа үгсийг харах боломжтой бөгөөд энэ нь зөвхөн 
+        судалгаа, боловсрол, мэдээллийн зорилгоор ашиглагдана.
+      </p>
       {notification && (
         <div className={`mb-4 p-4 rounded ${notification.type === 'success' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`} role="alert">
           <p>{notification.message}</p>
@@ -196,16 +205,26 @@ export function Page() {
           </div>
         </CardFooter>
       </Card>
-      <footer className="mt-8 text-center">
-        <a 
-          href="https://www.instagram.com/buyakublai" 
-          target="_blank" 
-          rel="noopener noreferrer"
-          className="inline-flex items-center text-blue-600 hover:text-blue-800"
-        >
-          <Instagram className="w-4 h-4 mr-1" />
-          @buyakublai
-        </a>
+      <footer className="mt-8 max-w-md mx-auto">
+        <div className="flex justify-between items-center">
+          <a 
+            href="https://www.instagram.com/buyakublai" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="inline-flex items-center text-blue-600 hover:text-blue-800"
+          >
+            <Instagram className="w-4 h-4 mr-1" />
+            buyakublai
+          </a>
+          <a 
+            href="https://buyakublai.com" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="text-blue-600 hover:text-blue-800"
+          >
+            buyakublai.com
+          </a>
+        </div>
       </footer>
     </div>
   )
