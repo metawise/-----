@@ -11,5 +11,5 @@
 Хэрэглэж болох нэг жишээ.
 
 
-![](https://cln.sh/1ZlXmlL3)
+![](https://media.cleanshot.cloud/media/86486/8f9XUivJiFaGvevAROqjX0hZEvnoP4kqlRR3ezTo.gif?Expires=1726603458&Signature=DxMkeQDogNUR~BiJNSGFVTeUU0HytieCIaitDpROAbRG~U2LVFyrFkH4Ki-g3Gm8mtIsEq9hNcNwK7QjtPDf0Pq0hyNZfEnNCgt8Vzs8PQhdgRketOCCX3bUA3S3tNsFgAKE9MaITREUprvUTmAwjtyyn5vArI-6MEBEj6P4zFmiAeZRQdMKCrOKzfdFIDkE0BCpLvxbBeFk6c~c9LESK4rfQ4XWG6rpSYWRZPzIH8bAxaRgNEQ0Vs3nhs~VQw1ETc7apYL69~-gr0EIpG0PDp6EkKTG9Xu23BoUdGpQsFUsxQBC7F6o5ljPr9f2Tpjv9MNVRvV2QEKCq1ePotdVcA__&Key-Pair-Id=K269JMAT9ZF4GZ)
 
