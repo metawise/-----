@@ -48,7 +48,7 @@ export async function POST(request: Request) {
 
       const { url } = await put(BLOB_NAME, JSON.stringify(existingWords), {
         access: 'public',
-        addRandomSuffix: false,
+        addRandomSuffix: true,
       });
       
       console.log('Words saved successfully. URL:', url);

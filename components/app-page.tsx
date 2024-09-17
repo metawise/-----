@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { ClipboardCopy } from "lucide-react"
+import { ClipboardCopy, Instagram } from "lucide-react"
 
 type DisplayFormat = 'plain' | 'comma' | 'json'
 
@@ -180,6 +180,18 @@ export function Page() {
           </div>
         </CardFooter>
       </Card>
+      <footer className="mt-8 text-center text-sm text-gray-500">
+        <p>© {new Date().getFullYear()} Монгол хараалын үгс.</p>
+        <a 
+          href="https://www.instagram.com/buyakublai" 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="inline-flex items-center mt-2 text-blue-600 hover:text-blue-800"
+        >
+          <Instagram className="w-4 h-4 mr-1" />
+          @buyakublai
+        </a>
+      </footer>
     </div>
   )
 }
