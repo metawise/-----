@@ -23,7 +23,10 @@ export function Page() {
   const fetchWords = async () => {
     setIsLoading(true)
     try {
-      const response = await fetch('/api/words', { cache: 'no-store' })
+      const response = await fetch('/api/words', { 
+        cache: 'no-store',
+        headers: { 'Cache-Control': 'no-cache' }
+      })
       if (!response.ok) {
         throw new Error(`Үгсийг авчрахад алдаа гарлаа: ${response.statusText}`)
       }
@@ -51,6 +54,7 @@ export function Page() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache'
         },
         body: JSON.stringify(newWord),
       })
@@ -59,6 +63,7 @@ export function Page() {
         setWords(data.words)
         setNotification({ message: `Үг нэмэгдлээ. Нийт үгийн тоо: ${data.wordCount}`, type: 'success' })
         console.log('Word saved successfully:', newWord)
+        console.log('Updated word list:', data.words)
       } else {
         throw new Error(data.error || 'Үг хадгалахад алдаа гарлаа')
       }
@@ -181,7 +186,7 @@ export function Page() {
         </CardFooter>
       </Card>
       <footer className="mt-8 text-center text-sm text-gray-500">
-        <p>© {new Date().getFullYear()} Монгол хараалын үгс.</p>
+        <p>© {new Date().getFullYear()} Монгол хараалын үгс. Бүх эрх хуулиар хамгаалагдсан.</p>
         <a 
           href="https://www.instagram.com/buyakublai" 
           target="_blank" 
