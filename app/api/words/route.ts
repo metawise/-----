@@ -1,31 +1,27 @@
-import { put, list } from '@vercel/blob';
 import { NextResponse } from 'next/server';
+import { Pool } from 'pg';
 
-const BLOB_NAME = 'words.json';
+const pool = new Pool({
+  connectionString: "postgres://default:7uK0vCEeHITt@ep-fragrant-tooth-a4ylkur1.us-east-1.aws.neon.tech:5432/verceldb?sslmode=require"
+});
 
-async function getLatestWords() {
-  console.log('Fetching latest words...');
-  const { blobs } = await list();
-  const wordBlob = blobs.find(blob => blob.pathname === BLOB_NAME);
-  
-  if (wordBlob) {
-    console.log('Word blob found:', wordBlob);
-    const response = await fetch(wordBlob.url, { cache: 'no-store' });
-    if (!response.ok) {
-      throw new Error(`Failed to fetch blob content: ${response.statusText}`);
-    }
-    const text = await response.text();
-    console.log('Fetched words:', text);
-    return JSON.parse(text);
+function isValidWord(word: string): boolean {
+  return /^[а-яА-ЯөӨүҮёЁa-zA-Z\s]+$/.test(word);
+}
+
+async function getWords(): Promise<string[]> {
+  const client = await pool.connect();
+  try {
+    const result = await client.query('SELECT word FROM words ORDER BY word');
+    return result.rows.map(row => row.word);
+  } finally {
+    client.release();
   }
-  console.log('No word blob found, returning empty array');
-  return [];
 }
 
 export async function GET() {
   try {
-    const words = await getLatestWords();
-    console.log('GET: Retrieved words:', words);
+    const words = await getWords();
     return NextResponse.json(words);
   } catch (error) {
     console.error('Error in GET request:', error);
@@ -35,35 +31,42 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const newWord = await request.json();
-    console.log('POST: Received new word:', newWord);
+    const newWords = await request.json();
     
-    if (typeof newWord !== 'string') {
-      return NextResponse.json({ success: false, error: 'Буруу оролт: текст утга шаардлагатай' }, { status: 400 });
+    if (!Array.isArray(newWords)) {
+      return NextResponse.json({ success: false, error: 'Буруу оролт: үгсийн массив шаардлагатай' }, { status: 400 });
     }
 
-    const existingWords = await getLatestWords();
-    console.log('POST: Existing words before update:', existingWords);
+    const invalidWords = newWords.filter(word => !isValidWord(word));
+    if (invalidWords.length > 0) {
+      return NextResponse.json({ success: false, error: `Буруу оролт: "${invalidWords.join(', ')}" нь зөвхөн үсэг агуулаагүй байна` }, { status: 400 });
+    }
 
-    if (!existingWords.includes(newWord)) {
-      existingWords.push(newWord);
-      console.log('POST: Updated words to be saved:', existingWords);
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
 
-      const { url } = await put(BLOB_NAME, JSON.stringify(existingWords), {
-        access: 'public',
-        addRandomSuffix: false,
+      const insertPromises = newWords.map(word => 
+        client.query('INSERT INTO words (word) VALUES ($1) ON CONFLICT (word) DO NOTHING', [word])
+      );
+      await Promise.all(insertPromises);
+
+      await client.query('COMMIT');
+
+      const updatedWords = await getWords();
+
+      return NextResponse.json({ 
+        success: true, 
+        wordCount: updatedWords.length, 
+        words: updatedWords,
+        addedWords: newWords,
+        addedCount: newWords.length
       });
-      
-      console.log('POST: Words saved successfully. URL:', url);
-
-      // Fetch the words again to ensure we have the latest version
-      const updatedWords = await getLatestWords();
-      console.log('POST: Fetched updated words after save:', updatedWords);
-
-      return NextResponse.json({ success: true, url, wordCount: updatedWords.length, words: updatedWords });
-    } else {
-      console.log('POST: Word already exists, not adding');
-      return NextResponse.json({ success: false, error: 'Энэ үг аль хэдийн байна' }, { status: 409 });
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
     }
   } catch (error) {
     console.error('Үгсийг шинэчлэхэд алдаа гарлаа:', error);

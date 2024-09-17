@@ -8,6 +8,10 @@ import { ClipboardCopy, Instagram } from "lucide-react"
 
 type DisplayFormat = 'plain' | 'comma' | 'json'
 
+function isValidWord(word: string): boolean {
+  return /^[а-яА-ЯөӨүҮёЁa-zA-Z\s]+$/.test(word);
+}
+
 export function Page() {
   const [words, setWords] = useState<string[]>([])
   const [currentWord, setCurrentWord] = useState('')
@@ -25,7 +29,7 @@ export function Page() {
     try {
       const response = await fetch('/api/words', { 
         cache: 'no-store',
-        headers: { 'Cache-Control': 'no-cache' }
+        headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate' }
       })
       if (!response.ok) {
         throw new Error(`Үгсийг авчрахад алдаа гарлаа: ${response.statusText}`)
@@ -47,22 +51,27 @@ export function Page() {
     }
   }
 
-  const saveWord = async (newWord: string) => {
+  const saveWords = async (newWords: string[]) => {
     setIsSaving(true)
     try {
+      const invalidWords = newWords.filter(word => !isValidWord(word));
+      if (invalidWords.length > 0) {
+        throw new Error(`Буруу оролт: "${invalidWords.join(', ')}" нь зөвхөн үсэг агуулаагүй байна`);
+      }
+
       const response = await fetch('/api/words', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Cache-Control': 'no-cache'
+          'Cache-Control': 'no-cache, no-store, must-revalidate'
         },
-        body: JSON.stringify(newWord),
+        body: JSON.stringify(newWords),
       })
       const data = await response.json()
       if (data.success) {
         setWords(data.words)
-        setNotification({ message: `Үг нэмэгдлээ. Нийт үгийн тоо: ${data.wordCount}`, type: 'success' })
-        console.log('Word saved successfully:', newWord)
+        setNotification({ message: `${data.addedCount} үг нэмэгдлээ. Нийт үгийн тоо: ${data.wordCount}`, type: 'success' })
+        console.log('Words saved successfully:', data.addedWords)
         console.log('Updated word list:', data.words)
       } else {
         throw new Error(data.error || 'Үг хадгалахад алдаа гарлаа')
@@ -81,8 +90,10 @@ export function Page() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (currentWord.trim() && !isSaving) {
-      await saveWord(currentWord.trim())
+      const newWords = currentWord.split(',').map(word => word.trim()).filter(word => word !== '')
+      await saveWords(newWords)
       setCurrentWord('')
+      await fetchWords() // Fetch words again after saving
     }
   }
 
@@ -129,7 +140,7 @@ export function Page() {
               type="text"
               value={currentWord}
               onChange={(e) => setCurrentWord(e.target.value)}
-              placeholder="Үг оруулна уу"
+              placeholder="Үг оруулна уу (таслалаар тусгаарлан олон үг оруулж болно)"
               disabled={isSaving}
             />
             <Button type="submit" className="w-full" disabled={isSaving}>
@@ -185,13 +196,12 @@ export function Page() {
           </div>
         </CardFooter>
       </Card>
-      <footer className="mt-8 text-center text-sm text-gray-500">
-        <p>© {new Date().getFullYear()} Монгол хараалын үгс. Бүх эрх хуулиар хамгаалагдсан.</p>
+      <footer className="mt-8 text-center">
         <a 
           href="https://www.instagram.com/buyakublai" 
           target="_blank" 
           rel="noopener noreferrer"
-          className="inline-flex items-center mt-2 text-blue-600 hover:text-blue-800"
+          className="inline-flex items-center text-blue-600 hover:text-blue-800"
         >
           <Instagram className="w-4 h-4 mr-1" />
           @buyakublai
