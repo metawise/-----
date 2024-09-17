@@ -12,7 +12,7 @@ function isValidWord(word: string): boolean {
 async function getWords(): Promise<string[]> {
   const client = await pool.connect();
   try {
-    const result = await client.query('SELECT word FROM words ORDER BY word');
+    const result = await client.query('SELECT word FROM words ORDER BY id DESC');
     return result.rows.map(row => row.word);
   } finally {
     client.release();

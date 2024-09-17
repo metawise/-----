@@ -4,10 +4,15 @@ import { useState, useEffect } from 'react'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { ClipboardCopy, Instagram } from "lucide-react"
-// import { ScrollArea } from "@/components/ui/scroll-area"
+import { ClipboardCopy, Instagram, ChevronDown, ChevronUp, X, Check } from "lucide-react"
+import { ScrollArea } from "@/components/ui/scroll-area"
 
 type DisplayFormat = 'plain' | 'comma' | 'json'
+
+type Notification = {
+  message: string;
+  type: 'success' | 'error';
+}
 
 function isValidWord(word: string): boolean {
   return /^[а-яА-ЯөӨүҮёЁa-zA-Z\s]+$/.test(word);
@@ -19,11 +24,25 @@ export function Page() {
   const [displayFormat, setDisplayFormat] = useState<DisplayFormat>('json')
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
-  const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
+  const [notification, setNotification] = useState<Notification | null>(null)
+  const [isExpanded, setIsExpanded] = useState(false)
+  const [isCopied, setIsCopied] = useState(false)
+
+  const apiUrl = `${process.env.NEXT_PUBLIC_API_URL || ''}/api/words`
 
   useEffect(() => {
     fetchWords()
   }, [])
+
+  useEffect(() => {
+    if (notification) {
+      const timer = setTimeout(() => {
+        setNotification(null)
+      }, 4000)
+
+      return () => clearTimeout(timer)
+    }
+  }, [notification])
 
   const fetchWords = async () => {
     setIsLoading(true)
@@ -110,8 +129,10 @@ export function Page() {
     }
   }
 
-  const copyToClipboard = () => {
-    navigator.clipboard.writeText(formatWords(displayFormat)).then(() => {
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text).then(() => {
+      setIsCopied(true)
+      setTimeout(() => setIsCopied(false), 2000)
       setNotification({ message: 'Өгөгдлийг таны clipboard-д хуулсан.', type: 'success' })
     }).catch((err) => {
       console.error('Хуулахад алдаа гарлаа:', err)
@@ -126,23 +147,55 @@ export function Page() {
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-4xl font-bold text-center mb-8">Монгол хараалын үгс</h1>
-      <p className="text-justify mb-8 max-w-md mx-auto">
-        Энэхүү төсөл нь интернет орчин дахь дарамт, доромжлол болон сөрөг үг хэллэгийг 
-        таньж, түүнтэй тэмцэх зорилготой. <br/><br/>Монгол хэлний хараалын үгс болон бусад 
-        хортой хэллэгүүдийг цуглуулж, тэдгээрийг таних, шүүх, улмаар эерэг, хүндэтгэлтэй 
-        харилцааг дэмжихийг хүссэний үүднээс энэ сайтыг эхлүүллээ.<br/><br/>Энэ мэдээллийг ашиглан бид цахим орчин дахь 
-        хэл яриаг сайжруулж, илүү аюулгүй, эерэг орчныг бий болгоход хувь нэмрээ оруулах 
-        болно. Та шинэ үг нэмэх, одоо байгаа үгсийг харах боломжтой бөгөөд энэ нь зөвхөн 
-        судалгаа, боловсрол, мэдээллийн зорилгоор ашиглагдана.
-      </p>
+      
+      <div className="text-center mb-8 max-w-md mx-auto">
+        <p className={`transition-all duration-300 ease-in-out ${isExpanded ? 'max-h-full' : 'max-h-20 overflow-hidden'}`}>
+          Энэхүү төсөл нь интернет орчин дахь дарамт, доромжлол болон сөрөг үг хэллэгийг 
+          таньж, түүнтэй тэмцэх зорилготой. <br/><br/>Монгол хэлний хараалын үгс болон бусад 
+          хортой хэллэгүүдийг цуглуулж, тэдгээрийг таних, шүүх, улмаар эерэг, хүндэтгэлтэй 
+          харилцааг дэмжихийг хүссэний үүднээс энэ сайтыг эхлүүллээ.<br/><br/>Энэ мэдээллийг ашиглан бид цахим орчин дахь 
+          хэл яриаг сайжруулж, илүү аюулгүй, эерэг орчныг бий болгоход хувь нэмрээ оруулах 
+          болно. Та шинэ үг нэмэх, одоо байгаа үгсийг харах боломжтой бөгөөд энэ нь зөвхөн 
+          судалгаа, боловсрол, мэдээллийн зорилгоор ашиглагдана.
+        </p>
+        <Button
+          onClick={() => setIsExpanded(!isExpanded)}
+          variant="ghost"
+          className="mt-2"
+        >
+          {isExpanded ? (
+            <>
+              хаах <ChevronUp className="ml-2 h-4 w-4" />
+            </>
+          ) : (
+            <>
+              дэлгэрэнгүй <ChevronDown className="ml-2 h-4 w-4" />
+            </>
+          )}
+        </Button>
+      </div>
+
       {notification && (
-        <div className={`mb-4 p-4 rounded ${notification.type === 'success' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`} role="alert">
+        <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50 p-4 rounded shadow-lg flex items-center justify-between max-w-sm w-full" 
+             role="alert"
+             style={{
+               backgroundColor: notification.type === 'success' ? 'rgba(220, 252, 231, 0.95)' : 'rgba(254, 226, 226, 0.95)',
+               color: notification.type === 'success' ? '#047857' : '#B91C1C',
+             }}>
           <p>{notification.message}</p>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setNotification(null)}
+            className="ml-2"
+          >
+            <X className="h-4 w-4" />
+          </Button>
         </div>
       )}
-      <Card className="max-w-md mx-auto">
+      <Card className="max-w-md mx-auto mb-8">
         <CardHeader>
-          <CardTitle>Үг нэмэх</CardTitle>
+          <CardTitle>Үг нэмэх ({words.length})</CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -160,25 +213,20 @@ export function Page() {
         </CardContent>
         <CardFooter className="flex flex-col items-start">
           <div className="w-full mb-4">
-            <p className="text-lg font-semibold text-primary">
-              {`Нийт үгс: ${words.length}`}
-            </p>
-          </div>
-          <div className="w-full mb-4">
-            <div className="flex space-x-2 mb-2">
+            <div className="flex flex-wrap gap-2 mb-2">
               <Button
                 variant={displayFormat === 'plain' ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => setDisplayFormat('plain')}
               >
-                Энгийн жагсаалт
+                Жагсаалт
               </Button>
               <Button
                 variant={displayFormat === 'comma' ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => setDisplayFormat('comma')}
               >
-                Таслалаар тусгаарлах
+                Таслалтай
               </Button>
               <Button
                 variant={displayFormat === 'json' ? 'default' : 'outline'}
@@ -195,16 +243,41 @@ export function Page() {
               variant="ghost"
               size="icon"
               className="absolute top-0 right-0"
-              onClick={copyToClipboard}
+              onClick={() => copyToClipboard(formatWords(displayFormat))}
               aria-label="Clipboard-д хуулах"
             >
               <ClipboardCopy className="h-4 w-4" />
             </Button>
-            <pre className="bg-gray-100 p-4 rounded-md overflow-x-auto whitespace-pre-wrap overflow">
-              {formatWords(displayFormat)}
-            </pre>
+            <ScrollArea className="h-[200px] w-full rounded-md border p-4">
+              <pre className="whitespace-pre-wrap">
+                {formatWords(displayFormat)}
+              </pre>
+            </ScrollArea>
           </div>
         </CardFooter>
+      </Card>
+      <Card className="max-w-md mx-auto">
+        <CardHeader>
+          <CardTitle>REST API URL</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center space-x-2">
+            <Input
+              type="text"
+              value={apiUrl}
+              readOnly
+              className="flex-grow"
+            />
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => copyToClipboard(apiUrl)}
+              className="flex-shrink-0"
+            >
+              {isCopied ? <Check className="h-4 w-4" /> : <ClipboardCopy className="h-4 w-4" />}
+            </Button>
+          </div>
+        </CardContent>
       </Card>
       <footer className="mt-8 max-w-md mx-auto">
         <div className="flex justify-between items-center">
