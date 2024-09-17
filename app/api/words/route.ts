@@ -42,7 +42,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: 'Буруу оролт: текст утга шаардлагатай' }, { status: 400 });
     }
 
-    let existingWords = await getLatestWords();
+    const existingWords = await getLatestWords();
     console.log('POST: Existing words before update:', existingWords);
 
     if (!existingWords.includes(newWord)) {
