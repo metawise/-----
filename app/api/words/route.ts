@@ -8,7 +8,7 @@ async function getLatestWords() {
   const wordBlob = blobs.find(blob => blob.pathname === BLOB_NAME);
   
   if (wordBlob) {
-    const response = await fetch(wordBlob.url, { cache: "reload" });
+    const response = await fetch(wordBlob.url, { cache: "no-cache" });
     if (!response.ok) {
       throw new Error(`Failed to fetch blob content: ${response.statusText}`);
     }
