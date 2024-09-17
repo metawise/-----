@@ -10,4 +10,6 @@
 
 Хэрэглэж болох нэг жишээ.
 
-https://cln.sh/1ZlXmlL3
+
+![](https://cln.sh/1ZlXmlL3)
+
