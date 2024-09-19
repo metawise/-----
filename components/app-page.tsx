@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { ClipboardCopy, Instagram, ChevronDown, ChevronUp, X, Check } from "lucide-react"
+import { ClipboardCopy, Instagram, ChevronDown, ChevronUp, X, Check, Trash2 } from "lucide-react"
 import { ScrollArea } from "@/components/ui/scroll-area"
 
 type DisplayFormat = 'plain' | 'comma' | 'json'
@@ -15,15 +15,19 @@ type Notification = {
 }
 
 function isValidWord(word: string): boolean {
-  return /^[а-яА-ЯөӨүҮёЁa-zA-Z\s]+$/.test(word);
+  // Check if the word is not a single character and doesn't consist of random letters
+  return word.length > 1 && 
+         /^[а-яА-ЯөӨүҮёЁa-zA-Z\s]+$/.test(word) &&
+         !/^[a-zA-Z]{10,}$/.test(word); // Assumes random strings are 10+ consecutive Latin letters
 }
 
-export function Page() {
+export default function Page() {
   const [words, setWords] = useState<string[]>([])
   const [currentWord, setCurrentWord] = useState('')
   const [displayFormat, setDisplayFormat] = useState<DisplayFormat>('json')
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
+  const [isCleaning, setIsCleaning] = useState(false)
   const [notification, setNotification] = useState<Notification | null>(null)
   const [isExpanded, setIsExpanded] = useState(false)
   const [isCopied, setIsCopied] = useState(false)
@@ -74,18 +78,17 @@ export function Page() {
   const saveWords = async (newWords: string[]) => {
     setIsSaving(true)
     try {
-      const invalidWords = newWords.filter(word => !isValidWord(word));
-      if (invalidWords.length > 0) {
-        throw new Error(`Буруу оролт: "${invalidWords.join(', ')}" нь зөвхөн үсэг агуулаагүй байна`);
+      const validWords = newWords.filter(isValidWord)
+      if (validWords.length === 0) {
+        throw new Error('Хүчинтэй үг байхгүй байна. Үг нь нэг үсгээс урт байх ёстой бөгөөд зөвхөн үсэг агуулсан байх ёстой.')
       }
-
       const response = await fetch('/api/words', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Cache-Control': 'no-cache, no-store, must-revalidate'
         },
-        body: JSON.stringify(newWords),
+        body: JSON.stringify(validWords),
       })
       const data = await response.json()
       if (data.success) {
@@ -138,6 +141,41 @@ export function Page() {
       console.error('Хуулахад алдаа гарлаа:', err)
       setNotification({ message: 'Өгөгдлийг хуулахад алдаа гарлаа.', type: 'error' })
     })
+  }
+
+  const cleanupWords = async () => {
+    setIsCleaning(true)
+    try {
+      const invalidWords = words.filter(word => !isValidWord(word))
+      if (invalidWords.length === 0) {
+        setNotification({ message: 'Хүчингүй үг олдсонгүй. Цэвэрлэх шаардлагагүй.', type: 'success' })
+        return
+      }
+      const response = await fetch('/api/words', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache, no-store, must-revalidate'
+        },
+        body: JSON.stringify({ words: invalidWords }),
+      })
+      if (!response.ok) {
+        throw new Error(`Үгсийг устгахад алдаа гарлаа: ${response.statusText}`)
+      }
+      const data = await response.json()
+      if (data.success) {
+        setWords(data.words)
+        setNotification({ message: `Цэвэрлэгдсэн. ${data.deletedCount} үг устгагдлаа.`, type: 'success' })
+        console.log('Cleaned words:', data.words)
+      } else {
+        throw new Error(data.error || 'Үгсийг цэвэрлэхэд алдаа гарлаа')
+      }
+    } catch (error) {
+      console.error('Үгсийг цэвэрлэхэд алдаа гарлаа:', error)
+      setNotification({ message: 'Үгсийг цэвэрлэхэд алдаа гарлаа. Дахин оролдоно уу.', type: 'error' })
+    } finally {
+      setIsCleaning(false)
+    }
   }
 
   if (isLoading) {
@@ -256,7 +294,7 @@ export function Page() {
           </div>
         </CardFooter>
       </Card>
-      <Card className="max-w-md mx-auto">
+      <Card className="max-w-md mx-auto mb-8">
         <CardHeader>
           <CardTitle>REST API URL</CardTitle>
         </CardHeader>
@@ -277,6 +315,22 @@ export function Page() {
               {isCopied ? <Check className="h-4 w-4" /> : <ClipboardCopy className="h-4 w-4" />}
             </Button>
           </div>
+        </CardContent>
+      </Card>
+      <Card className="max-w-md mx-auto mb-8">
+        <CardHeader>
+          <CardTitle>Үгсийг цэвэрлэх</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Button
+            onClick={cleanupWords}
+            disabled={isCleaning}
+            className="w-full"
+            variant="destructive"
+          >
+            {isCleaning ? 'Цэвэрлэж байна...' : 'Хүчингүй үгсийг устгах'}
+            <Trash2 className="ml-2 h-4 w-4" />
+          </Button>
         </CardContent>
       </Card>
       <footer className="mt-8 max-w-md mx-auto">
